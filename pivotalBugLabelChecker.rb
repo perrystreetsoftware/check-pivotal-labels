@@ -32,18 +32,19 @@ def label_matches?(label_name, valid_labels)
   clean_label_name(label_name) =~ Regexp.union(valid_labels.map { |label| Regexp.new(clean_label_name(label)) })
 end
 
-
-hasImpactLabel = false
-hasSourceLabel = false
-
-
-unless story.labels.none? { |label| label_matches?(label.name, impact_labels) } 
-  hasImpactLabel = true
-end 
-unless story.labels.none? { |label| label_matches?(label.name, source_labels) } 
-  hasSourceLabel = true
-end 
-
-unless hasSourceLabel && hasImpactLabel
-  raise "Story '#{story.name}' does not contain expected impact/source labels."
+if story.story_type == 'bug'
+  hasImpactLabel = false
+  hasSourceLabel = false
+  
+  
+  unless story.labels.none? { |label| label_matches?(label.name, impact_labels) } 
+    hasImpactLabel = true
+  end 
+  unless story.labels.none? { |label| label_matches?(label.name, source_labels) } 
+    hasSourceLabel = true
+  end 
+  
+  unless hasSourceLabel && hasImpactLabel
+    raise "Story '#{story.name}' does not contain expected impact/source labels."
+  end
 end
