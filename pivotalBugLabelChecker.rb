@@ -1,7 +1,9 @@
 branch_name = ENV['GITHUB_REF'].split('/').last  # GITHUB_REF contains the branch reference
-story_id_match = branch_name.match(/_(\d+)$/)  # Assuming story ID is at the end of the branch name
-story_id = story_id_match[1] if story_id_match
+branch_id_match = branch_name.match(/\[#(\d+)\]/)  # Extract branch ID within square brackets
+branch_id = branch_id_match[1] if branch_id_match
 
-unless story_id
-  raise "Unable to extract story ID from the branch name '#{branch_name}'."
+unless branch_id
+  raise "Unable to extract branch ID from the branch name '#{branch_name}'."
 end
+
+puts "Branch ID: #{branch_id}"
