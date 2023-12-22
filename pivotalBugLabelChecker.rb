@@ -1,4 +1,5 @@
-branch_name = ENV['GITHUB_REF'].split('/').last  # GITHUB_REF contains the branch reference
+branch_name = ENV['GITHUB_REF']  # GITHUB_REF contains the branch reference .split('/').last
+puts #{branch_name}
 branch_id_match = branch_name.match(/\[#(\d+)\]/)  # Extract branch ID within square brackets
 branch_id = branch_id_match[1] if branch_id_match
 
