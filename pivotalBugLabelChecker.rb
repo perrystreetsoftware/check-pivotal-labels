@@ -21,7 +21,6 @@ if branch_id
   source_labels = ["feature", "legacy", "refactor"]
   
   def label_matches?(label_name, valid_labels)
-    puts clean_label_name(label_name)
     clean_label_name(label_name) =~ Regexp.union(valid_labels.map { |label| Regexp.new(clean_label_name(label)) })
   end
   
@@ -43,3 +42,4 @@ if branch_id
   end
 end
 
+exit
