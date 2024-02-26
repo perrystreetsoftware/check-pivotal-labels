@@ -1,45 +1,74 @@
+#!/usr/bin/env ruby
+# frozen_strings_literal: true
 require 'tracker_api'
 
-branch_name = ENV['GITHUB_HEAD_REF'] 
-branch_id_match = branch_name.match(/_(\d+)$/)  # Extract numeric ID at the end of the branch name
-branch_id = branch_id_match[1] if branch_id_match
+class CheckBugLabels
 
-if branch_id
-  # Set your Pivotal Tracker API token and project ID
-  token = ENV['PIVOTAL_TOKEN']
-  client = TrackerApi::Client.new(token: token)
+  PIVOTAL_TOKEN = ENV['PIVOTAL_TOKEN']
+  BRANCH_NAME = ENV['GITHUB_HEAD_REF']
   
-  # Create a new Pivotal Tracker project client
-  story = client.story(branch_id)
-  
-  # Function to clean up label names
+  BRANCH_ID = BRANCH_NAME.match(/_(\d+)$/)  # Extract numeric ID at the end of the branch name
+  PIVOTAL_STORY_ID = BRANCH_ID[1] if BRANCH_ID
+
+  IMPACT_LABELS = ["prod", "beta", "develop"]
+  SOURCE_LABELS = ["feature", "legacy", "refactor"]
+  REGRESSION_LABELS = ["regression"]
+
+  def execute
+    if PIVOTAL_STORY_ID
+      story = client.story(PIVOTAL_STORY_ID)
+    
+      if story.story_type == 'bug'
+        check_impact_labels(story)
+        check_source_labels(story)
+        check_regression_labels(story)
+      end
+    end
+    
+    exit
+  end
+
+  def check_impact_labels(story)
+    if story.labels.none? { |label| label_matches?(label.name, IMPACT_LABELS) }
+      raise "Story ##{story.id} does not contain the impact label"
+    end
+  end
+
+  def check_source_labels(story)
+    if story.labels.none? { |label| label_matches?(label.name, SOURCE_LABELS) }
+      raise "Story ##{story.id} does not contain the source label"
+    end 
+  end
+
+  def check_regression_labels(story)
+    unless story.labels.none? { |label| label_matches?(label.name, REGRESSION_LABELS) }
+      blocker = story.blockers&.first&.description
+      blocker_story_id = blocker ? blocker[/\d+$/]&.to_i : nil
+
+      unless blocker_story_id
+        raise "Story ##{story.id} is a regression but the story id that caused the regression is missing from the blockers"
+      end
+
+      begin
+        client.story(blocker_story_id)
+      rescue => error
+        raise "Story ##{story.id} is a regression but the story id in the blockers is not a valid story"
+      end
+    end
+  end
+
   def clean_label_name(label_name)
     label_name.to_s.downcase.gsub(/[^a-z0-9]/, '')
   end
   
-  impact_labels = ["prod", "beta", "develop"]
-  source_labels = ["feature", "legacy", "refactor"]
-  
   def label_matches?(label_name, valid_labels)
     clean_label_name(label_name) =~ Regexp.union(valid_labels.map { |label| Regexp.new(clean_label_name(label)) })
   end
-  
-  if story.story_type == 'bug'
-    hasImpactLabel = false
-    hasSourceLabel = false
-    
-    
-    unless story.labels.none? { |label| label_matches?(label.name, impact_labels) } 
-      hasImpactLabel = true
-    end 
-    unless story.labels.none? { |label| label_matches?(label.name, source_labels) } 
-      hasSourceLabel = true
-    end 
-    
-    unless hasSourceLabel && hasImpactLabel
-      raise "Story '#{story.name}' does not contain expected impact/source labels."
-    end
+
+  def client
+    @client ||= TrackerApi::Client.new(token: PIVOTAL_TOKEN)
   end
+
 end
 
-exit
+CheckBugLabels.new.execute if __FILE__ == $PROGRAM_NAME
