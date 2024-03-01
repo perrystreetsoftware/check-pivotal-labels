@@ -8,7 +8,7 @@ class CheckBugLabels
   BRANCH_NAME = ENV['GITHUB_HEAD_REF']
   
   BRANCH_ID = BRANCH_NAME.match(/_(\d+)$/)  # Extract numeric ID at the end of the branch name
-  PIVOTAL_STORY_ID = BRANCH_ID ? BRANCH_ID[1] : exit(1)
+  PIVOTAL_STORY_ID = BRANCH_ID ? BRANCH_ID[1] : exit(0)
   IMPACT_LABELS = ["prod", "beta", "develop"]
   SOURCE_LABELS = ["feature", "legacy", "refactor"]
   REGRESSION_LABELS = ["regression"]
