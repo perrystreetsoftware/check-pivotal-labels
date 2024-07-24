@@ -9,9 +9,9 @@ class CheckBugLabels
   
   BRANCH_ID = BRANCH_NAME.match(/_(\d+)$/)  # Extract numeric ID at the end of the branch name
   PIVOTAL_STORY_ID = BRANCH_ID ? BRANCH_ID[1] : exit(0)
-  IMPACT_LABELS = ["prod", "beta", "develop"]
-  SOURCE_LABELS = ["feature", "legacy", "refactor"]
-  REGRESSION_LABELS = ["regression"]
+  IMPACT_LABELS = ["impact: prod", "impact: beta", "impact: develop"]
+  SOURCE_LABELS = ["src: feature", "src: legacy", "src: refactor"]
+  REGRESSION_LABELS = ["type: regression"]
 
   def execute
     if PIVOTAL_STORY_ID
